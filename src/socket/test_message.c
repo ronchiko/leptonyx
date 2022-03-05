@@ -10,7 +10,7 @@ int test_create_message_when_valid_string_then_create_message(void) {
 
 	const char *MESSAGE = "Im a unique message";
 
-	leptonyx_socket_message message = leptonyx_create_message(MESSAGE);
+	leptonyx_message message = leptonyx_create_message(MESSAGE);
 	ASSERT(message.count == strlen(MESSAGE));
 	ASSERT(strncmp(message.bytes, MESSAGE, strlen(MESSAGE)) == 0);
 
@@ -21,7 +21,7 @@ cleanup:
 int test_create_message_when_string_null_then_return_empty_message(void) {
 	int result = 0;
 	
-	leptonyx_socket_message message = leptonyx_create_message(NULL);
+	leptonyx_message message = leptonyx_create_message(NULL);
 	ASSERT(message.count == 0);
 	ASSERT(message.bytes == NULL);
 
@@ -33,7 +33,7 @@ cleanup:
 int test_create_message_when_string_empty_then_return_empty_message(void) {
 	int result = 0;
 
-	leptonyx_socket_message message = leptonyx_create_message("");
+	leptonyx_message message = leptonyx_create_message("");
 	ASSERT(message.count == 0);
 	ASSERT(message.bytes == NULL);
 

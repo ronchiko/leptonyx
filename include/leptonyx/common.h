@@ -8,6 +8,8 @@ typedef uint32_t 	leptonyx_size;
 
 typedef uint8_t 	leptonyx_error;
 
+typedef char *leptonyx_string;
+
 enum {
 	LEPTONYX_TRUE 	= 1,
 	LEPTONYX_FALSE	= 0

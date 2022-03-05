@@ -7,6 +7,8 @@
 
 #pragma comment(lib, "Ws2_32.lib")
 
+#define DEFAULT_WAIT		10
+
 typedef leptonyx_socket_address_family af_t;
 typedef leptonyx_socket_protocol proto_t;
 typedef leptonyx_socket_type sock_type_t;
@@ -48,7 +50,7 @@ void leptonyx_close_socket(leptonyx_socket sock) {
 	closesocket((SOCKET)sock);
 }
 
-leptonyx_error leptonyx_socket_send_in_batches(leptonyx_socket sock, leptonyx_socket_message message, leptonyx_size batch_size) {
+leptonyx_error leptonyx_socket_send_in_batches(leptonyx_socket sock, leptonyx_message message, leptonyx_size batch_size) {
 	if (!sock) return LEPTONYX_SOCKET_ERROR;
 	
 	for(int sent = 0; sent < message.count; sent += batch_size) {
@@ -62,7 +64,7 @@ leptonyx_error leptonyx_socket_send_in_batches(leptonyx_socket sock, leptonyx_so
 	return LEPTONYX_OK;
 }
 
-leptonyx_error leptonyx_socket_send(leptonyx_socket sock, leptonyx_socket_message message) {
+leptonyx_error leptonyx_socket_send(leptonyx_socket sock, leptonyx_message message) {
 	if (!sock) return LEPTONYX_SOCKET_ERROR;
 
 	int bytes_sent = 0;
@@ -74,8 +76,8 @@ leptonyx_error leptonyx_socket_send(leptonyx_socket sock, leptonyx_socket_messag
 	return LEPTONYX_OK;
 }
 
-leptonyx_socket_message leptonyx_socket_recv(leptonyx_socket sock) {
-	leptonyx_socket_message result = leptonyx_create_empty_message();
+leptonyx_message leptonyx_socket_recv(leptonyx_socket sock) {
+	leptonyx_message result = leptonyx_create_empty_message();
 	if (!sock) return result;
 
 	leptonyx_string_builder sb = leptonyx_create_empty_string_builder();
@@ -90,7 +92,6 @@ leptonyx_socket_message leptonyx_socket_recv(leptonyx_socket sock) {
 			leptonyx_string_builder_append_raw(&sb, buffer, bytes_recieved);
 	} while(bytes_recieved == 1024);
 
-	leptonyx_log_info("Adopting bytes", bytes_recieved);
 	result.bytes = leptonyx_string_builder_adopt_string(&sb, &result.count);
 	leptonyx_free_string_builder(&sb);
 
@@ -148,7 +149,7 @@ void leptonyx_socket_listen(leptonyx_socket sock, leptonyx_socket_callback callb
 	while (!*kill) {
 		struct sockaddr inaddr;
 		int length = sizeof inaddr;
-		memset(&inaddr, 0, length);
+		ZeroMemory(&inaddr, length);
 
 		SOCKET acceptedSock;
 		if((acceptedSock = accept((SOCKET)sock, &inaddr, &length)) == SOCKET_ERROR) {
@@ -160,4 +161,38 @@ void leptonyx_socket_listen(leptonyx_socket sock, leptonyx_socket_callback callb
 
 		closesocket((SOCKET)acceptedSock);
 	}
+}
+
+void leptonyx_socket_select(leptonyx_socket sock, leptonyx_socket_callback callback, leptonyx_bool *kill) {
+	WSAPOLLFD fdarray = { 0 };
+	fdarray.fd = (SOCKET)sock;
+	fdarray.events = POLLRDNORM;
+
+	if(listen((SOCKET)sock, SOMAXCONN) == SOCKET_ERROR) {
+		return;
+	}
+
+	for (;!*kill;) {
+		// Check if we have a socket to accept from the listener
+		int result;
+		if((result = WSAPoll(&fdarray, 1, DEFAULT_WAIT)) == SOCKET_ERROR) {
+			*kill = LEPTONYX_TRUE;
+			return;
+		}
+
+		if (result) {
+			if (fdarray.revents & POLLRDNORM) {
+				
+				SOCKET accpted_socket = accept((SOCKET)sock, NULL, NULL);
+				if(accpted_socket == INVALID_SOCKET) {
+					continue;
+				}
+
+				(*callback)((leptonyx_socket)accpted_socket);
+
+				closesocket(accpted_socket);
+			}
+		}
+	}
+
 }

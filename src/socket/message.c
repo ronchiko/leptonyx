@@ -4,15 +4,15 @@
 
 #include "leptonyx/socket.h"
 
-leptonyx_socket_message leptonyx_create_empty_message(void) {
-	return (leptonyx_socket_message){ 
+leptonyx_message leptonyx_create_empty_message(void) {
+	return (leptonyx_message){ 
 		.bytes = NULL,
 		.count = 0
 	};
 }
 
-leptonyx_socket_message leptonyx_create_message(const char *restrict string) {
-	leptonyx_socket_message message = leptonyx_create_empty_message();
+leptonyx_message leptonyx_create_message(const char *restrict string) {
+	leptonyx_message message = leptonyx_create_empty_message();
 	if (!string) {
 		return message;
 	}

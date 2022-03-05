@@ -2,6 +2,7 @@
 
 #include "leptonyx/common.h"
 #include "leptonyx/af.h"
+#include "leptonyx/message.h"
 
 typedef enum {
 	LEPTONYX_STREAM_SOCKET_TYPE,
@@ -24,13 +25,7 @@ typedef enum {
 	__LEPTONYX_SOCKET_PROTOCOLS_END__
 } leptonyx_socket_protocol;
 
-typedef struct {
-	leptonyx_size count;
-	leptonyx_byte *bytes;
-} leptonyx_socket_message;
 
-leptonyx_socket_message leptonyx_create_empty_message(void);
-leptonyx_socket_message leptonyx_create_message(const char *restrict message);
 
 typedef void *leptonyx_socket;
 
@@ -49,9 +44,9 @@ typedef void (*leptonyx_socket_callback)(leptonyx_socket);
 void leptonyx_socket_listen(leptonyx_socket socket, leptonyx_socket_callback callback, leptonyx_bool *killswitch);
 void leptonyx_socket_select(leptonyx_socket socket, leptonyx_socket_callback callback, leptonyx_bool *killswitch);
 
-leptonyx_socket_message leptonyx_socket_recv(leptonyx_socket socket);
+leptonyx_message leptonyx_socket_recv(leptonyx_socket socket);
 
-leptonyx_error leptonyx_socket_send(leptonyx_socket socket, leptonyx_socket_message message);
-leptonyx_error leptonyx_socket_send_in_batches(leptonyx_socket socket, leptonyx_socket_message message, leptonyx_size batch_size);
+leptonyx_error leptonyx_socket_send(leptonyx_socket socket, leptonyx_message message);
+leptonyx_error leptonyx_socket_send_in_batches(leptonyx_socket socket, leptonyx_message message, leptonyx_size batch_size);
 
 void leptonyx_close_socket(leptonyx_socket socket);
